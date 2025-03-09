@@ -1,13 +1,12 @@
 package com.safe.SafeNotes.models;
 
-
+import com.safe.SafeNotes.models.User;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.springframework.security.core.userdetails.User;
 
 import java.util.HashSet;
 import java.util.Set;

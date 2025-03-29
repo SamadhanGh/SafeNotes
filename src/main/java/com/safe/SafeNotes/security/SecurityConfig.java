@@ -28,14 +28,13 @@ import java.time.LocalDate;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true,
         securedEnabled = true,
         jsr250Enabled = true)
 public class SecurityConfig {
-
-
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
@@ -44,35 +43,23 @@ public class SecurityConfig {
         return new AuthTokenFilter();
     }
 
-
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-
         http.csrf(csrf ->
                 csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/api/auth/public/**")
-
         );
-//        http.csrf(AbstractHttpConfigurer::disable);
-
+        //http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests((requests)
                 -> requests
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("api/csrf-token").permitAll()
+                .requestMatchers("/api/csrf-token").permitAll()
                 .requestMatchers("/api/auth/public/**").permitAll()
                 .anyRequest().authenticated());
-
         http.exceptionHandling(exception
                 -> exception.authenticationEntryPoint(unauthorizedHandler));
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
-//        http.addFilterBefore(new CustomLoggingFilter(),
-//                UsernamePasswordAuthenticationFilter.class);
-//        http.addFilterAfter(new RequestValidationFilter(),
-//                CustomLoggingFilter.class);
-
-
+        http.addFilterBefore(authenticationJwtTokenFilter(),
+                UsernamePasswordAuthenticationFilter.class);
         http.formLogin(withDefaults());
         http.httpBasic(withDefaults());
         return http.build();
@@ -82,7 +69,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -134,6 +120,7 @@ public class SecurityConfig {
 }
 
 
+//*****************************************************************************************************************
 //    @Bean
 //    public UserDetailsService userDetailsService(DataSource dataSource) {
 //       JdbcUserDetailsManager manager =

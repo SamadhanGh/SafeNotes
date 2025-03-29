@@ -3,20 +3,30 @@ package com.safe.SafeNotes.services.impl;
 
 import com.safe.SafeNotes.dtos.UserDTO;
 import com.safe.SafeNotes.models.AppRole;
+import com.safe.SafeNotes.models.PasswordResetToken;
 import com.safe.SafeNotes.models.Role;
 import com.safe.SafeNotes.models.User;
+import com.safe.SafeNotes.repositories.PasswordResetTokenRepository;
 import com.safe.SafeNotes.repositories.RoleRepository;
 import com.safe.SafeNotes.repositories.UserRepository;
 import com.safe.SafeNotes.services.UserService;
+import com.safe.SafeNotes.util.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Value("${frontend.url}")
+    String frontendUrl;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -26,6 +36,13 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     RoleRepository roleRepository;
+
+    @Autowired
+    PasswordResetTokenRepository passwordResetTokenRepository;
+
+    @Autowired
+    EmailService emailService;
+
 
     @Override
     public void updateUserRole(Long userId, String roleName) {
@@ -128,4 +145,27 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Failed to update password");
         }
     }
+
+    @Override
+    public void generatePasswordResetToken(String email){
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = UUID.randomUUID().toString();
+        Instant expiryDate = Instant.now().plus(24, ChronoUnit.HOURS);
+        PasswordResetToken resetToken = new PasswordResetToken(token, expiryDate, user);
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
+        // Send email to user
+
+        emailService.sendPasswordResetEmail(user.getEmail(), resetUrl);
+
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+
+    }
+
 }

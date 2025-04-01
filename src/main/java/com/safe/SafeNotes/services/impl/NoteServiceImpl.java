@@ -5,10 +5,12 @@ import com.safe.SafeNotes.services.AuditLogService;
 import com.safe.SafeNotes.services.NoteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class NoteServiceImpl implements NoteService {
 
     @Autowired
@@ -50,6 +52,7 @@ public class NoteServiceImpl implements NoteService {
     public List<Note> getNotesForUser(String username) {
         List<Note> personalNotes = noteRepository
                 .findByOwnerUsername(username);
+        System.out.println(personalNotes);
         return personalNotes;
     }
 }

@@ -1,8 +1,10 @@
 package com.safe.SafeNotes.security;
 
-import com.safe.SafeNotes.models.User;
+
+import com.safe.SafeNotes.config.OAuth2LoginSuccessHandler;
 import com.safe.SafeNotes.models.AppRole;
 import com.safe.SafeNotes.models.Role;
+import com.safe.SafeNotes.models.User;
 import com.safe.SafeNotes.repositories.RoleRepository;
 import com.safe.SafeNotes.repositories.UserRepository;
 import com.safe.SafeNotes.security.jwt.AuthEntryPointJwt;
@@ -11,13 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -28,7 +29,6 @@ import java.time.LocalDate;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true,
@@ -37,6 +37,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
+
+    @Autowired
+    @Lazy
+    OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -55,7 +59,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/csrf-token").permitAll()
                 .requestMatchers("/api/auth/public/**").permitAll()
-                .anyRequest().authenticated());
+                .requestMatchers("/oauth2/**").permitAll()
+                .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> {
+                    oauth2.successHandler(oAuth2LoginSuccessHandler);
+                });
         http.exceptionHandling(exception
                 -> exception.authenticationEntryPoint(unauthorizedHandler));
         http.addFilterBefore(authenticationJwtTokenFilter(),
@@ -119,53 +127,3 @@ public class SecurityConfig {
     }
 }
 
-
-//*****************************************************************************************************************
-//    @Bean
-//    public UserDetailsService userDetailsService(DataSource dataSource) {
-//       JdbcUserDetailsManager manager =
-//               new JdbcUserDetailsManager(dataSource);
-//        if (!manager.userExists("user1")) {
-//            manager.createUser(
-//                    User.withUsername("user1")
-//                            .password("{noop}password1")
-//                            .roles("USER")
-//                            .build()
-//            );
-//        }
-//        if (!manager.userExists("admin")) {
-//            manager.createUser(
-//                    User.withUsername("admin")
-//                            .password("{noop}adminPass")
-//                            .roles("ADMIN")
-//                            .build()
-//            );
-//        }
-//        return manager;
-//    }
-
-
-
-
-
-
-
-//public class SecurityConfig {
-//
-//    @Bean
-//    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-//        http.authorizeHttpRequests((requests) -> requests
-//                .requestMatchers("/contact").permitAll()
-//                .requestMatchers("/public/**").permitAll()
-//                .requestMatchers("/admin/**").denyAll()
-//                .anyRequest().authenticated());
-//    http.formLogin(withDefaults())
-//
-//        //FOR disabling the CSRF
-//        http.csrf(csrf -> csrf.disable());
-//
-//        http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-//        http.httpBasic(withDefaults());
-//        return http.build();
-//    }
-//}

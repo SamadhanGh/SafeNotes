@@ -5,7 +5,6 @@ package com.safe.SafeNotes.services;
 import com.safe.SafeNotes.models.Note;
 
 import java.util.List;
-
 public interface NoteService {
     Note createNoteForUser(String username, String content);
 

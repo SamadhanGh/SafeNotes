@@ -1,5 +1,6 @@
 package com.safe.SafeNotes.security.jwt;
 
+import com.safe.SafeNotes.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -34,22 +35,21 @@ public class JwtUtils {
         return null;
     }
 
-    public String generateTokenFromUsername(UserDetails userDetails) {
-        String username = userDetails.getUsername();
 
+    public String generateTokenFromUsername(UserDetailsImpl userDetails) {
+        String username = userDetails.getUsername();
         String roles = userDetails.getAuthorities().stream()
                 .map(authority -> authority.getAuthority())
                 .collect(Collectors.joining(","));
-
         return Jwts.builder()
                 .subject(username)
                 .claim("roles", roles)
+                .claim("is2faEnabled", userDetails.is2faEnabled())
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
                 .compact();
     }
-
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
                         .verifyWith((SecretKey) key())
